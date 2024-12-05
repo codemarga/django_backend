@@ -41,7 +41,6 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'user_management',
     'problem_management',
-    'submission_system',
     'coderun',
 ]
 

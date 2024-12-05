@@ -29,6 +29,15 @@ class Problem(models.Model):
         blank=True,
         help_text="Optional: Add follow-up questions or problem extensions."
     )
+    
+    category = models.ForeignKey(
+        "Category",
+        on_delete=models.SET_NULL,  # or CASCADE, based on your preference
+        null=True,
+        blank=True,
+        related_name="problems_in_category",
+        help_text="Select a category for this problem."
+    )
 
     def __str__(self):
         return self.title
@@ -36,7 +45,15 @@ class Problem(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
-    problems = models.ManyToManyField(Problem)
+    problems = models.ManyToManyField(
+        "Problem",
+        blank=True,
+        related_name="categories_related_to_problems"  # Unique reverse name
+    )
+
+    def __str__(self):
+        return self.name
+
 
 class TestCase(models.Model):
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
