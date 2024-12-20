@@ -10,4 +10,5 @@ urlpatterns = [
     path('', home, name='home'),
     path('users/', include('user_management.urls')),
     path('problems/',include('problem_management.urls')),
+    path('',include('coderun.urls')),
 ]
