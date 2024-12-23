@@ -8,7 +8,7 @@ def home(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),
-    path('users/', include('user_management.urls')),
+    path('', include('user_management.urls')),
     path('problems/',include('problem_management.urls')),
     path('',include('coderun.urls')),
 ]

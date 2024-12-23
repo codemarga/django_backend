@@ -30,6 +30,15 @@ class RegisterUserView(APIView):
 
 class LoginUserView(APIView):
     def post(self, request):
+        
+        if request.data.get("mode") == "google":
+            username = request.data.get('name')
+            email = request.data.get('email')
+            if User.objects.filter(username=username).exists():
+                return 
+            
+            return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
+        
         username = request.data.get('username')
         password = request.data.get('password')
 
