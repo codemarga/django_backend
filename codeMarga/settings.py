@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'user_management',
     'problem_management',
     'coderun',
+    'contest_management',
     'corsheaders',
 ]
 
