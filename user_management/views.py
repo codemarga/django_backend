@@ -41,19 +41,35 @@ class RegisterUserView(APIView):
 
 class LoginUserView(APIView):
     def post(self, request):
-        username = request.data.get('username')
+        email = request.data.get('email')
         password = request.data.get('password')
 
         # Validate input
-        if not username or not password:
+        if not email or not password:
             return Response(
-                {"error": "Missing fields", "details": "Both username and password are required."},
+                {"error": "Both email and password are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Authenticate user
-        user = authenticate(username=username, password=password)
+        # Get user by email
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Invalid credentials, please try again."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # Authenticate the user
+        user = authenticate(username=user.username, password=password)
         if user:
+            if not user.is_active:
+                return Response(
+                    {"error": "Your account is inactive. Please contact support."},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            # Generate tokens
             refresh = RefreshToken.for_user(user)
             return Response(
                 {
@@ -64,10 +80,9 @@ class LoginUserView(APIView):
             )
 
         return Response(
-            {"error": "Invalid credentials", "details": "Incorrect username or password."},
+            {"error": "Invalid credentials, please try again."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
-
 
 class LogoutUserView(APIView):
     def post(self, request):
