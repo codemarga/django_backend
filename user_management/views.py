@@ -41,19 +41,26 @@ class RegisterUserView(APIView):
 
 class LoginUserView(APIView):
     def post(self, request):
-        
         if request.data.get("mode") == "google":
             username = request.data.get('name')
             email = request.data.get('email')
+
             if User.objects.filter(username=username).exists():
-                return 
-            
-            return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
-        
+                user = User.objects.get(username=username)
+            else:
+                user = User.objects.create_user(username=username, email=email)
+
+            access_token = RefreshToken.for_user(user).access_token
+            return Response(
+                {
+                    "message": "logged in successfully",  
+                },
+                status=status.HTTP_200_OK,
+            )
+
         username = request.data.get('username')
         password = request.data.get('password')
 
-        # Validate input
         if not username or not password:
             return Response(
                 {"error": "Missing fields", "details": "Both username and password are required."},
@@ -63,11 +70,11 @@ class LoginUserView(APIView):
         # Authenticate user
         user = authenticate(username=username, password=password)
         if user:
-            refresh = RefreshToken.for_user(user)
+            # Generate access token only
+            access_token = RefreshToken.for_user(user).access_token
             return Response(
                 {
-                    "refresh": str(refresh),
-                    "access": str(refresh.access_token),
+                    "token": str(access_token),  # Send only the access token
                 },
                 status=status.HTTP_200_OK,
             )
@@ -76,7 +83,6 @@ class LoginUserView(APIView):
             {"error": "Invalid credentials", "details": "Incorrect username or password."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
-
 
 class LogoutUserView(APIView):
     def post(self, request):
