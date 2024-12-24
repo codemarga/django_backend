@@ -63,12 +63,21 @@ class LoginUserView(APIView):
 
         if not username or not password:
             return Response(
-                {"error": "Missing fields", "details": "Both username and password are required."},
+                {"error": "Both email and password are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Authenticate user
-        user = authenticate(username=username, password=password)
+        # Get user by email
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "Invalid credentials, please try again."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # Authenticate the user
+        user = authenticate(username=user.username, password=password)
         if user:
             # Generate access token only
             access_token = RefreshToken.for_user(user).access_token
@@ -80,7 +89,7 @@ class LoginUserView(APIView):
             )
 
         return Response(
-            {"error": "Invalid credentials", "details": "Incorrect username or password."},
+            {"error": "Invalid credentials, please try again."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
 
