@@ -1,11 +1,15 @@
-from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.contrib.auth.models import User
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.tokens import AccessToken
 from django.contrib.auth import authenticate
+from django.contrib.auth.models import User
+from datetime import timedelta
+from django.utils import timezone
+import jwt
+from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import UserSerializer, UserProfileSerializer
+from .serializers import UserProfileSerializer, UserSerializer
 
 
 class RegisterUserView(APIView):
@@ -39,8 +43,21 @@ class RegisterUserView(APIView):
         return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
 
 
+
+
 class LoginUserView(APIView):
+    def generate_token(self, user):
+        """Generate a single JWT token for the user."""
+        payload = {
+            'user_id': user.id,
+            'username': user.username,
+            'exp': timezone.now() + timedelta(days=1),  # Token expires in 1 day
+        }
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        return token
+
     def post(self, request):
+        # Google OAuth Login
         if request.data.get("mode") == "google":
             username = request.data.get('name')
             email = request.data.get('email')
@@ -50,24 +67,23 @@ class LoginUserView(APIView):
             else:
                 user = User.objects.create_user(username=username, email=email)
 
-            access_token = RefreshToken.for_user(user).access_token
             return Response(
                 {
-                    "message": "logged in successfully",  
+                    "message": "Logged in successfully via Google",
                 },
                 status=status.HTTP_200_OK,
             )
 
-        username = request.data.get('username')
+        # Email and Password Login
+        email = request.data.get('email')
         password = request.data.get('password')
 
-        if not username or not password:
+        if not email or not password:
             return Response(
                 {"error": "Both email and password are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Get user by email
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -76,14 +92,13 @@ class LoginUserView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        # Authenticate the user
         user = authenticate(username=user.username, password=password)
         if user:
-            # Generate access token only
-            access_token = RefreshToken.for_user(user).access_token
+            token = self.generate_token(user)
             return Response(
                 {
-                    "token": str(access_token),  # Send only the access token
+                    "message": "Logged in successfully",
+                    "token": token,
                 },
                 status=status.HTTP_200_OK,
             )
@@ -92,6 +107,7 @@ class LoginUserView(APIView):
             {"error": "Invalid credentials, please try again."},
             status=status.HTTP_401_UNAUTHORIZED,
         )
+
 
 class LogoutUserView(APIView):
     def post(self, request):

@@ -4,3 +4,4 @@ django-cors-headers
 djangorestframework-simplejwt
 requests
 django-import-export
+PyJWT

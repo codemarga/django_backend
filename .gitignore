@@ -14,11 +14,9 @@ Pipfile.lock
 
 # Django
 *.log
-*.sqlite3
-db.sqlite3
 /static/
 /media/
-*/migrations/*
+
 
 # Virtual Environment
 venv/
