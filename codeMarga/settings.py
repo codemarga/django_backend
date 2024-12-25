@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'user_management',
-    'problem_management',
     'coderun',
     'contest_management',
     'corsheaders',

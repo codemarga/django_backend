@@ -73,6 +73,21 @@ def analyze_time_complexity(code):
             complexity = "O(n)"
         else:
             complexity = "O(1)"
+            
+        if complexity == "O(2^n) or higher (recursion)": 
+            complexity_bonus = 10
+        elif complexity == "O(n^2)":
+            complexity_bonus = 20
+        elif complexity == "O(log n)":
+            complexity_bonus = 30
+        elif complexity == "O(n * log n)":
+            complexity_bonus = 40
+        elif complexity == "O(n log n)":
+            complexity_bonus = 50
+        elif complexity == "O(1)":
+            complexity_bonus = 60
+        elif complexity == "O(n)":
+            complexity_bonus = 70
 
         return {
             "loops": analyzer.loops,
@@ -81,7 +96,8 @@ def analyze_time_complexity(code):
             "has_dict": analyzer.has_dict,
             "has_recursion": analyzer.has_recursion,
             "logarithmic_loops": analyzer.logarithmic_loops,
-            "time_complexity": complexity
+            "time_complexity": complexity,
+            "complexity_bonus": complexity_bonus
         }
 
     except Exception as e:

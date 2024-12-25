@@ -36,8 +36,7 @@ class ContestParticipation(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contest_participations')
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE, related_name='participants')
     start_time = models.DateTimeField(auto_now_add=True)
-    stoppage_time = models.DateTimeField(default=lambda: timezone.now() + timezone.timedelta(days=1))
-
+    stoppage_time = models.DateTimeField(default = timezone.now() + timezone.timedelta(days=1))
     score = models.IntegerField(default=0)  # Score specific to this contest
     completed = models.BooleanField(default=False)
 
@@ -47,11 +46,9 @@ class ContestParticipation(models.Model):
 
 
 class ContestSubmission(models.Model):
-    participation = models.ForeignKey(ContestParticipation, on_delete=models.CASCADE, related_name='submissions')
-    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
+    contest = models.ForeignKey(Contest, on_delete=models.CASCADE, related_name='submissions')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contest_submissions')
     submission_time = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=[('SUCCESS', 'Success'), ('FAIL', 'Fail')])
-    score_awarded = models.IntegerField(default=0)
 
     def __str__(self):
-        return f"{self.participation.user.username} - {self.problem.title}"
+        return f"{self.user.username} - {self.contest.name} - {self.submission_time}"

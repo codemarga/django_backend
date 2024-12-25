@@ -9,6 +9,7 @@ from coderun.complexity_checker import analyze_time_complexity
 from django.http import JsonResponse
 from django.views import View
 from django.contrib.auth.models import User
+from coderun.utils import run_code
 
 
 
@@ -86,36 +87,49 @@ class JoinContestView(APIView):
 
 
 
-class SubmitContestCodeView(APIView):
+class SubmitContestProblemView(APIView):
     def post(self, request):
-        user = request.user
+        user = request.data.get('user_id')
         problem_id = request.data.get('problem_id')
         code = request.data.get('code')
         language = request.data.get('language')
+        contest_id = request.data.get('contest_id')
 
         try:
             participation = ContestParticipation.objects.get(user=user, completed=False)
         except ContestParticipation.DoesNotExist:
             return Response({"error": "No active contest participation found"}, status=status.HTTP_400_BAD_REQUEST)
 
+        contest_participation = ContestParticipation.objects.get(user=user, contest_id= contest_id)
+        start_time=contest_participation.start_time
+        stoppage_time=contest_participation.stoppage_time
+        time_duration=stoppage_time-start_time
         current_time = timezone.now()
-        if current_time > participation.stoppage_time:
-            time_bonus = 5
+        time_taken = current_time - start_time
+        
+        if time_taken > time_duration:
+            time_bonus = 0
         else:
-            time_bonus = 10
+            bonus_time = time_duration - time_taken
+            bonus_time = bonus_time.total_seconds()
+            time_bonus = int(bonus_time)/time_duration.total_seconds() * 100
 
-        # Execute code
-        callback_url = "http://localhost:8000/judge0/callback/"
-        execute_code_with_callback(language, code, '', '', [], problem_id, callback_url)
-
-        # Assume code execution succeeded and test cases passed
-        complexity_result = analyze_time_complexity(code)
-        best_complexity = complexity_result.get('time_complexity') == "O(n)"  # Example best case
-        complexity_bonus = 5 if best_complexity else 0
-
-        total_score = time_bonus + complexity_bonus
-
-        # Update Contest Participation (contest-specific score)
+        run_code_result = run_code(problem_id, code, language)
+        
+        test_case_bonus = run_code_result.test_case_bonus
+        complexity_bonus = 0
+        if test_case_bonus > 50 :
+            complexity_result = analyze_time_complexity(code)
+            complexity_bonus = complexity_result.complexity_bonus
+        
+        total_score = test_case_bonus + time_bonus + complexity_bonus
+        
+        # updata problem points
+        problem = ContestProblem.objects.get(contest_id=contest_id, problem_id=problem_id)
+        problem.points = total_score
+        problem.save()
+        
+        # Update Contest Participation (cumulative contest score)
         participation.score += total_score
         participation.save()
 
@@ -140,6 +154,14 @@ class SubmitContestCodeView(APIView):
             "complexity_bonus": complexity_bonus
         }, status=status.HTTP_200_OK)
 
+class ContestSubmissionView(APIView):
+    def post(self, request):
+        user = request.data.get('user_id')
+        contest_id = request.data.get('contest_id')
+        submission = ContestSubmission.objects.create(user=user, contest_id=contest_id)
+        return Response({
+            "message":"Contest Submission Successful"
+        }, status=status.HTTP_200_OK)
 
 class ContestScoresView(APIView):
     def get(self, request, contest_id):

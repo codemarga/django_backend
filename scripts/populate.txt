@@ -1,0 +1,24 @@
+
+Problem 1
+
+Two Sum
+
+Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
+
+You can return the answer in any order.
+
+[{"input": "nums = [2,7,11,15], target = 9", "output": "[0,1]", "explanation": "Because nums[0] + nums[1] == 9, we return [0, 1]."}]
+
+Solution
+
+{"python": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:", "cpp": "class Solution {\npublic:\n    vector<int> twoSum(vector<int>& nums, int target) {\n        // Implement your code here\n    }\n};", "java": "class Solution {\n    public int[] twoSum(int[] nums, int target) {\n        // Implement your code here\n    }\n};"}
+
+{"python": "from {class_name} import {class_name}\n\ninstance = {class_name}()\nresults = []\ntest_cases = [\n{test_cases}\n]\n\nfor test in test_cases:\n    try:\n        output = instance.{method_name}(*test['input'])\n        results.append(output == test['expected_output'])\n    except Exception as e:\n        results.append(False)\n\nprint(results)", "cpp": "#include <iostream>\n#include <vector>\n#include <unordered_map>\nusing namespace std;\n\n{user_code}\n\nint main() {{\n    {class_name} instance;\n\n    // Test inputs\n    vector<pair<vector<int>, int>> test_cases = {{\n{test_cases}\n    }};\n\n    // Expected outputs\n    vector<vector<int>> expected_outputs = {{\n{expected_outputs}\n    }};\n\n    for (size_t i = 0; i < test_cases.size(); ++i) {{\n        auto result = instance.{method_name}(test_cases[i].first, test_cases[i].second);\n        cout << \"Test Case \" << i + 1 << \": \" << (result == expected_outputs[i] ? \"PASS\" : \"FAIL\") << endl;\n    }}\n    return 0;\n}}", "java": "public class Main {{\n    public static void main(String[] args) {{\n        {class_name} instance = new {class_name}();\n        boolean[] results = new boolean[] {{\n{test_cases}\n        }};\n        System.out.println(Arrays.toString(results));\n    }}\n}}"}
+
+2 <= nums.length <= 10^4\n-10^9 <= nums[i] <= 10^9\n-10^9 <= target <= 10^9.
+
+Can you come up with an algorithm that is less than O(n^2) time complexity?
+
+Problem 2
