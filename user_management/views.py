@@ -10,6 +10,42 @@ import jwt
 from django.conf import settings
 from rest_framework.permissions import IsAuthenticated
 from .serializers import UserProfileSerializer, UserSerializer
+from django.db.models import Sum
+from .models import UserProblem
+from django.db.models import Count
+from django.db.models.functions import TruncDay
+
+class ProblemsSolvedPerDayView(APIView):
+    def get(self, request):
+        today = timezone.now()
+        one_week_ago = today - timezone.timedelta(days=7)
+
+        # Filter UserProblem objects for the past week and aggregate by day
+        problems_solved = (
+            UserProblem.objects.filter(submission_time__gte=one_week_ago)
+            .annotate(day=TruncDay('submission_time'))
+            .values('day')
+            .annotate(problems_solved=Count('id'))
+            .order_by('day')
+        )
+
+        # Format the response data
+        response_data = {entry['day'].strftime('%Y-%m-%d'): entry['problems_solved'] for entry in problems_solved}
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+class LeaderBoardView(APIView):
+    def get(self, request):
+        users = User.objects.all()
+        user_list = [
+            {
+                "username": user.username,
+                "points": UserProblem.objects.filter(user=user).aggregate(total_points=Sum('points_awarded'))['total_points'] or 0,
+            }
+            for user in users
+        ]
+        user_list.sort(key=lambda x: x["points"], reverse=True)
+        return Response(user_list, status=status.HTTP_200_OK)
 
 
 class RegisterUserView(APIView):

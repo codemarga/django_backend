@@ -45,6 +45,7 @@ def generate_driver_script(language, user_code, method_name, test_cases, problem
 
 def execute_code_with_callback(language, user_code, class_name, method_name, test_cases, problem_id, callback_url):
     driver_code = generate_driver_script(language, user_code, method_name, test_cases, problem_id)
+    print(driver_code)
     encoded_code = base64.b64encode(driver_code.encode('utf-8')).decode('utf-8')
 
     data = {

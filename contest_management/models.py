@@ -37,7 +37,7 @@ class ContestParticipation(models.Model):
     contest = models.ForeignKey(Contest, on_delete=models.CASCADE, related_name='participants')
     start_time = models.DateTimeField(auto_now_add=True)
     stoppage_time = models.DateTimeField(default = timezone.now() + timezone.timedelta(days=1))
-    score = models.IntegerField(default=0)  # Score specific to this contest
+    score = models.IntegerField(default=0) 
     completed = models.BooleanField(default=False)
 
     def __str__(self):

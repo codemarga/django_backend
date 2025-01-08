@@ -5,3 +5,4 @@ djangorestframework-simplejwt
 requests
 django-import-export
 PyJWT
+pytz

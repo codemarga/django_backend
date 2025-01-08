@@ -45,6 +45,8 @@ class Problem(models.Model):
         related_name="problems",
         help_text="Select one or more categories for this problem."
     )
+    
+    difficulty_wise_points = models.IntegerField(choices=((500, '500'), (1000, '1000'), (1500, '1500')))
 
     def __str__(self):
         return self.title

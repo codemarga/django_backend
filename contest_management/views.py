@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.views import View
 from django.contrib.auth.models import User
 from coderun.utils import run_code
+from django.utils.timezone import localtime
 
 
 
@@ -34,7 +35,7 @@ class ContestListView(APIView):
     
 class ContestProblemListView(APIView):
     def get(self, request):
-        contest_id = request.data.get('contest_id')
+        contest_id = request.query_params.get('contest_id')
         print(contest_id)
         try:
             contest = Contest.objects.get(id=contest_id)
@@ -43,6 +44,12 @@ class ContestProblemListView(APIView):
 
         contest_problems = ContestProblem.objects.filter(contest=contest)
         problem_data = []
+        time_duration =  contest.end_time - contest.start_time 
+        days, seconds = time_duration.days, time_duration.seconds
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = seconds % 60
+        formatted_duration = f"{days}d {hours}h {minutes}m {seconds}s"
 
         for contest_problem in contest_problems:
             problem = contest_problem.problem
@@ -56,20 +63,23 @@ class ContestProblemListView(APIView):
 
         return Response({
             "contest_name": contest.name,
+            "contest_id": contest_id,
+            "contest_description": contest.description,
+            "start_time": localtime(contest.start_time).strftime("%Y-%m-%d %H:%M:%S"),
+            "time_duration": formatted_duration,
             "problems": problem_data
         }, status=status.HTTP_200_OK)
         
-
 class JoinContestView(APIView):
     """Identifies the user and the contest in which they want to participate."""
 
     def post(self, request):
-        user = request.data.get('user')  # Ensures authenticated user is used
+        email = request.data.get('email')  # Ensures authenticated user is used
         contest_id = request.data.get('contest_id')
-        print(user)
+        print(email)
         print(contest_id)
         
-        user = User.objects.get(id=user)
+        user = User.objects.get(email=email)
         if not contest_id:
             return Response({"error": "Contest ID is required"}, status=status.HTTP_400_BAD_REQUEST)
 
