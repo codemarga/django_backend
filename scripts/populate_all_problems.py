@@ -3,11 +3,7 @@ import sys
 import django
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'codeMarga.settings')
-try:
-    if not django.apps.apps.ready:
-        django.setup()
-except Exception:
-    pass
+django.setup()
 
 from coderun.models import Problem, TestCase, Category
 
