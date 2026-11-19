@@ -93,19 +93,43 @@ class LoginUserView(APIView):
         return token
 
     def post(self, request):
-        # Google OAuth Login
-        if request.data.get("mode") == "google":
-            username = request.data.get('name')
-            email = request.data.get('email')
+        mode = request.data.get("mode")
+
+        # OAuth Login (Google & GitHub treated independently)
+        if mode in ("google", "github", "oauth"):
+            raw_name = request.data.get('name') or request.data.get('username') or ''
+            email = request.data.get('email') or ''
+            if not raw_name:
+                raw_name = email.split('@')[0] if email else f"user_{mode}"
+
+            # Treat each account independently:
+            # Google and GitHub create separate, independent user accounts
+            if mode == "github":
+                username = f"{raw_name} (GitHub)"
+            else:
+                if User.objects.filter(username=raw_name).exists():
+                    username = raw_name
+                else:
+                    username = f"{raw_name} (Google)"
+
+            username = username[:150]
 
             if User.objects.filter(username=username).exists():
                 user = User.objects.get(username=username)
             else:
-                user = User.objects.create_user(username=username, email=email)
+                try:
+                    user = User.objects.create_user(username=username, email=email)
+                except Exception:
+                    import uuid
+                    unique_username = f"{username[:140]}_{str(uuid.uuid4())[:6]}"
+                    user = User.objects.create_user(username=unique_username, email=email)
 
+            token = self.generate_token(user)
             return Response(
                 {
-                    "message": "Logged in successfully via Google",
+                    "message": f"Logged in successfully via {mode.capitalize()}",
+                    "token": token,
+                    "username": user.username,
                 },
                 status=status.HTTP_200_OK,
             )

@@ -3,7 +3,11 @@ import sys
 import django
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'codeMarga.settings')
-django.setup()
+try:
+    if not django.apps.apps.ready:
+        django.setup()
+except Exception:
+    pass
 
 from coderun.models import Problem, TestCase, Category
 
@@ -359,58 +363,62 @@ problems_data = [
     }
 ]
 
-print("Starting problem population and update...")
-for item in problems_data:
-    pid = item.get("id")
-    problem = None
-    if pid:
-        problem = Problem.objects.filter(id=pid).first()
-    if not problem:
-        problem = Problem.objects.filter(title=item["title"]).first()
+def seed_all_problems():
+    print("Starting problem population and update...")
+    for item in problems_data:
+        pid = item.get("id")
+        problem = None
+        if pid:
+            problem = Problem.objects.filter(id=pid).first()
+        if not problem:
+            problem = Problem.objects.filter(title=item["title"]).first()
 
-    driver_template = get_driver_template(item["class_name"], item["method_name"])
+        driver_template = get_driver_template(item["class_name"], item["method_name"])
 
-    if problem:
-        problem.title = item["title"]
-        problem.description = item["description"]
-        problem.examples = item["examples"]
-        problem.class_name = item["class_name"]
-        problem.method_name = item["method_name"]
-        problem.default_code = item["default_code"]
-        problem.driver_template = driver_template
-        problem.constraints = item.get("constraints", "")
-        problem.followup = item.get("followup", "")
-        problem.difficulty_wise_points = item.get("difficulty_wise_points", 500)
-        problem.save()
-        print(f"Updated existing problem ID {problem.id}: {problem.title}")
-    else:
-        problem = Problem.objects.create(
-            title=item["title"],
-            description=item["description"],
-            examples=item["examples"],
-            class_name=item["class_name"],
-            method_name=item["method_name"],
-            default_code=item["default_code"],
-            driver_template=driver_template,
-            constraints=item.get("constraints", ""),
-            followup=item.get("followup", ""),
-            difficulty_wise_points=item.get("difficulty_wise_points", 500),
-        )
-        print(f"Created new problem ID {problem.id}: {problem.title}")
+        if problem:
+            problem.title = item["title"]
+            problem.description = item["description"]
+            problem.examples = item["examples"]
+            problem.class_name = item["class_name"]
+            problem.method_name = item["method_name"]
+            problem.default_code = item["default_code"]
+            problem.driver_template = driver_template
+            problem.constraints = item.get("constraints", "")
+            problem.followup = item.get("followup", "")
+            problem.difficulty_wise_points = item.get("difficulty_wise_points", 500)
+            problem.save()
+            print(f"Updated existing problem ID {problem.id}: {problem.title}")
+        else:
+            problem = Problem.objects.create(
+                title=item["title"],
+                description=item["description"],
+                examples=item["examples"],
+                class_name=item["class_name"],
+                method_name=item["method_name"],
+                default_code=item["default_code"],
+                driver_template=driver_template,
+                constraints=item.get("constraints", ""),
+                followup=item.get("followup", ""),
+                difficulty_wise_points=item.get("difficulty_wise_points", 500),
+            )
+            print(f"Created new problem ID {problem.id}: {problem.title}")
 
-    # Set categories
-    for cat_name in item.get("categories_list", []):
-        cat, _ = Category.objects.get_or_create(name=cat_name)
-        problem.categories.add(cat)
+        # Set categories
+        for cat_name in item.get("categories_list", []):
+            cat, _ = Category.objects.get_or_create(name=cat_name)
+            problem.categories.add(cat)
 
-    # Replace / recreate test cases
-    TestCase.objects.filter(problem=problem).delete()
-    for tc in item["test_cases"]:
-        TestCase.objects.create(
-            problem=problem,
-            input_data=tc["input_data"],
-            expected_output=tc["expected_output"]
-        )
-    print(f"  Added {len(item['test_cases'])} test cases for {problem.title}")
+        # Replace / recreate test cases
+        TestCase.objects.filter(problem=problem).delete()
+        for tc in item["test_cases"]:
+            TestCase.objects.create(
+                problem=problem,
+                input_data=tc["input_data"],
+                expected_output=tc["expected_output"]
+            )
+        print(f"  Added {len(item['test_cases'])} test cases for {problem.title}")
 
-print("Done! Total problems in database:", Problem.objects.count())
+    print("Done! Total problems in database:", Problem.objects.count())
+
+if __name__ == '__main__':
+    seed_all_problems()

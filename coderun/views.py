@@ -17,6 +17,13 @@ from user_management.models import UserProblem
 
 class ProblemListView(APIView):
     def get(self, request):
+        if not Problem.objects.exists():
+            try:
+                from scripts.populate_all_problems import seed_all_problems
+                seed_all_problems()
+            except Exception as e:
+                print("Auto-seeding error:", e)
+
         problems = Problem.objects.all()
         difficulty_map = {500: "Easy", 1000: "Medium", 1500: "Hard"}
         problem_list = [
